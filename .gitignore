@@ -1,0 +1,34 @@
+# --------------------
+# Python (Backend)
+# --------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+venv/
+*.log
+
+# Ignore model files and checkpoints
+*.pth
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Ignore large data directory
+data/
+image_data/
+user_drawings/
+
+# --------------------
+# Node.js (Frontend)
+# --------------------
+node_modules/
+build/
+dist/
+.env
+
+# --------------------
+# macOS / System Files
+# --------------------
+.DS_Store

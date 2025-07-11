@@ -1,0 +1,42 @@
+.maincontainer{
+  height: 100%;
+  display: flex;
+  justify-content: center;   
+  align-items: center;       
+}
+.canvas-box {
+  flex: 1;
+  margin: 20px;
+  padding: 20px;
+  background-color: #fff0b3;
+  border-radius: 12px;
+}
+
+.controls {
+  margin-top: 16px;
+}
+
+.controls button {
+  margin-right: 12px;
+  padding: 8px 16px;
+  background: none;
+  color: #c8a2c8;
+  border: 2px solid #c8a2c8;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.prediction {
+  color: white;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+.sketch-container{
+  height: 80%;
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   
+  align-items: center;    
+}
