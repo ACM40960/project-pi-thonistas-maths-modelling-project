@@ -1,0 +1,41 @@
+/* src/components/SideBar/SideBar.css */
+
+.sidebar {
+  position: fixed;
+  top: 10vh;
+  right: 0;
+  width: 200px;
+  height: calc(90vh - 8rem);
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #c8a2c8; 
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.05);
+  margin: 3rem 1rem;
+}
+
+.class-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  color: white;
+  font-size: 16px;
+  padding: 12px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.class-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.class-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,36 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Fixed TopBar */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  z-index: 1000;
+  background-color: #c8a2c8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+}
+
+/* Main Content pushed down below TopBar */
+.main-content {
+  margin-top: 80px; 
+  flex-grow: 1;
+  padding: 1rem;
+}

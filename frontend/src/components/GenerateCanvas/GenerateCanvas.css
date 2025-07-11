@@ -1,0 +1,39 @@
+.maincontainer{
+  height: 100%;
+  display: flex;
+  justify-content: center;   
+  align-items: center;   
+}
+.generate-canvas {
+  margin-right: 200px;
+  padding: 2rem;
+  position: relative;
+  /* background-color: blue; */
+
+  height: 80%;
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   
+  align-items: center; 
+}
+
+.drawing-area {
+  padding-left: 1rem;
+}
+
+.highlight {
+  color: #4a148c;
+  font-weight: bold;
+}
+
+.canvas-placeholder {
+  margin-top: 1rem;
+  width: 400px;
+  height: 300px;
+  border: 2px dashed #c8a2c8;
+  background-color: #fdfdfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
