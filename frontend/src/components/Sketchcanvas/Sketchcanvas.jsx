@@ -1,11 +1,12 @@
-// src/components/Sketchcanvas/Sketchcanvas.jsx
 import React, { useRef, useState } from "react";
 import { ReactSketchCanvas } from "react-sketch-canvas";
+import SketchResults from "../SketchResults/SketchResults";
 import "./Sketchcanvas.css";
 
 function SketchCanvas() {
   const canvasRef = useRef(null);
   const [prediction, setPrediction] = useState("");
+  const [showResult, setShowResult] = useState(false);
 
   const handleClear = () => {
     if (canvasRef.current) canvasRef.current.clearCanvas();
@@ -33,19 +34,26 @@ function SketchCanvas() {
           ? `(${(data.confidence * 100).toFixed(2)}%)`
           : "";
         setPrediction(`${data.label} ${confidence}`);
-      } else if (data.error) {
-        setPrediction(`Error: ${data.error}`);
+        setShowResult(true);
       } else {
         setPrediction("No prediction received.");
+        setShowResult(true);
       }
     } catch (error) {
       console.error("Error submitting drawing:", error);
       setPrediction("Error: Unable to connect to server.");
+      setShowResult(true);
     }
   };
 
+  const handleReset = () => {
+    if (canvasRef.current) canvasRef.current.clearCanvas();
+    setPrediction("");
+    setShowResult(false);
+  };
+
   return (
-    <div className="maincontainer"> 
+    <div className="maincontainer">
       <div className="sketch-container">
         <ReactSketchCanvas
           ref={canvasRef}
@@ -54,7 +62,7 @@ function SketchCanvas() {
           strokeWidth={4}
           strokeColor="black"
           style={{
-            border: "2px dashed #c8a2c8",
+            border: "5px solid #B49FFF",
             borderRadius: "8px",
             marginBottom: "16px",
           }}
@@ -63,12 +71,11 @@ function SketchCanvas() {
           <button onClick={handleClear}>Clear</button>
           <button onClick={handleSubmit}>Submit</button>
         </div>
-        {prediction && (
-          <div className="prediction">
-            Prediction: <strong>{prediction}</strong>
-          </div>
-        )}
       </div>
+
+      {showResult && (
+        <SketchResults prediction={prediction} onReset={handleReset} />
+      )}
     </div>
   );
 }

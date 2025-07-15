@@ -2,8 +2,16 @@
   height: 100%;
   display: flex;
   justify-content: center;   
-  align-items: center;       
+  align-items: center;   
+  background-image: url('../../../public/image2.png');
+  background-size: cover;       
+  background-position: center;   
+  background-repeat: no-repeat; 
+  width: 100%;  
 }
+/* .canvas{
+  cursor: url('../../../public/cursor.cur'), auto;  
+} */
 .canvas-box {
   flex: 1;
   margin: 20px;
@@ -17,17 +25,26 @@
 }
 
 .controls button {
-  margin-right: 12px;
-  padding: 8px 16px;
-  background: none;
-  color: #c8a2c8;
-  border: 2px solid #c8a2c8;
-  border-radius: 4px;
+  font-family: 'Boldonse', system-ui;
+  margin-left: 16px;
+  padding: 10px 20px;
+  font-size: 12px;
+  background: #B49FFF;
+  color: white;
+  border: 2px solid white;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
+.controls button:hover {
+  color: #B49FFF;
+  background: #ffffff;
+  border: 2px solid #B49FFF;
+}
 .prediction {
-  color: white;
+  color: #B49FFF;
+  font-family: 'Boldonse', system-ui;
   margin-top: 10px;
   font-size: 16px;
 }
