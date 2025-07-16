@@ -22,8 +22,6 @@ def train_model(data_dir, epochs=30, batch_size=64):
     transform = transforms.Compose([
         transforms.Grayscale(1),
         transforms.Resize((64, 64)),
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(0, translate=(0.1, 0.1)),
         transforms.ToTensor()
     ])
 
