@@ -53,7 +53,7 @@ function SketchCanvas() {
   };
 
   return (
-    <div className="maincontainer">
+    <div className="sketchmaincontainer">
       <div className="sketch-container">
         <ReactSketchCanvas
           ref={canvasRef}

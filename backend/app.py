@@ -20,26 +20,39 @@ model = SketchResNet()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device('cpu')))
 model.eval()
 
-# Degradation-based preprocessing
-def degrade_image(pil_img):
-    # Convert to grayscale numpy array
+def preprocess_user_image(pil_img):
+    # Convert to grayscale
     img = np.array(pil_img.convert("L"))
 
-    # Simulate pixelation
-    img = cv2.resize(img, (128, 128), interpolation=cv2.INTER_LINEAR)
-    img = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
+    # Threshold to binarize (remove gray/anti-aliasing)
+    _, img = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY)
+    # Dilation to thicken lines
+    kernel = np.ones((2, 2), np.uint8)
+    img = cv2.dilate(img, kernel, iterations=1)
 
-    # Gaussian blur
-    img = cv2.GaussianBlur(img, (3, 3), sigmaX=0.3)
+    # Find bounding box and crop
+    coords = cv2.findNonZero(255 - img)  # because we need black stroke on white for bounding box
+    if coords is None:
+        return None  # Return early if image is blank
 
-    # Erode to reduce stroke smoothness
-    kernel = np.ones((1, 1), np.uint8)
-    img = cv2.erode(img, kernel, iterations=1)
+    x, y, w, h = cv2.boundingRect(coords)
+    cropped = img[y:y+h, x:x+w]
+
+    # Pad to square
+    size = max(w, h)
+    padded = 255 * np.ones((size, size), dtype=np.uint8)
+    x_offset = (size - w) // 2
+    y_offset = (size - h) // 2
+    padded[y_offset:y_offset+h, x_offset:x_offset+w] = cropped
+
+    # Resize to 64x64
+    resized = cv2.resize(padded, (64, 64), interpolation=cv2.INTER_AREA)
 
     # Normalize and convert to tensor
-    img = img.astype(np.float32) / 255.0
-    tensor = torch.from_numpy(img).unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, 64, 64]
+    final = resized.astype(np.float32) / 255.0
+    tensor = torch.from_numpy(final).unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, 64, 64]
     return tensor
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -59,19 +72,23 @@ def predict():
         image.save(filename)
 
         # Degrade and preprocess the image
-        image_tensor = degrade_image(image)
-        # Save degraded image for inspection (optional)
-        degraded_np = image_tensor.squeeze().numpy() * 255  # [64, 64], rescale back to 0–255
-        degraded_np = degraded_np.astype(np.uint8)
-        cv2.imwrite(f"user_drawings/degraded_{int(time.time())}.png", degraded_np)
-
+        image_tensor = preprocess_user_image(image)
+        if image_tensor is None:
+            return jsonify({"error": "Blank image received"}), 400
+        
+        # OPTIONAL: Save preprocessed image for inspection
+        SAVE_DEBUG_IMAGES = True
+        if SAVE_DEBUG_IMAGES:
+            degraded_np = image_tensor.squeeze().numpy() * 255  # [64, 64]
+            degraded_np = degraded_np.astype(np.uint8)
+            cv2.imwrite(f"user_drawings/degraded_{int(time.time())}.png", degraded_np)
 
         with torch.no_grad():
             outputs = model(image_tensor)
             probs = F.softmax(outputs, dim=1)
             confidence, prediction = torch.max(probs, dim=1)
 
-        class_names = ["clock", "door", "bat", "bicycle", "paintbrush", "cactus", "lightbulb", "smileyface", "bus", "guitar"]
+        class_names = ['bat', 'bicycle', 'bus', 'cactus', 'clock', 'door', 'guitar', 'lightbulb', 'paintbrush', 'smileyface']
         predicted_label = class_names[prediction.item()]
         conf_value = confidence.item()
 
@@ -92,8 +109,8 @@ def receive_category():
     data = request.get_json()
     selected_class = data.get("label")
 
-    if selected_class not in ["clock", "door", "bat", "bicycle", "paintbrush",
-                              "cactus", "lightbulb", "smileyface", "bus", "guitar"]:
+    if selected_class not in ['bat', 'bicycle', 'bus', 'cactus', 'clock', 'door',
+                               'guitar', 'lightbulb', 'paintbrush', 'smileyface']:
         return jsonify({"error": "Invalid category"}), 400
     
     print(f"User selected category: {selected_class}")

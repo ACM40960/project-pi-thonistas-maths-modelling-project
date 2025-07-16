@@ -25,8 +25,6 @@ def vector_to_image(drawing, image_size=64, padding=20):
     canvas = cv2.resize(canvas, (image_size, image_size), interpolation=cv2.INTER_AREA)
     return canvas
 
-
-
 def save_images_from_ndjson(ndjson_path, out_dir, label, max_images=200):
     os.makedirs(out_dir, exist_ok=True)
     count = 0
@@ -43,6 +41,7 @@ def save_images_from_ndjson(ndjson_path, out_dir, label, max_images=200):
 
 if __name__ == "__main__":
     classes = ["clock", "door", "bat", "bicycle", "paintbrush", "cactus", "lightbulb", "smileyface", "bus", "guitar"]
+    # no need to change the class oder here cause we are just making folder from .ndjson 
     for cls in classes:
         ndjson_path = f"data/{cls}.ndjson"
         out_dir = f"image_data/{cls}"
