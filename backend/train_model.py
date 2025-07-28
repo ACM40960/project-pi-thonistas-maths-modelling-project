@@ -4,20 +4,48 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import os
 import matplotlib.pyplot as plt
-from torchvision import datasets, transforms, models
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision import datasets, transforms
 
-class SketchResNet(nn.Module):
+# Custom CNN model for 64x64 grayscale sketch classification
+class SketchCNN(nn.Module):
     def __init__(self):
-        super(SketchResNet, self).__init__()
-        self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
-        self.model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.model.fc = nn.Linear(self.model.fc.in_features, 10)  # 10 classes
+        super(SketchCNN, self).__init__()
+        self.cnn_layers = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2),  # 32x32
+
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2),  # 16x16
+
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2),  # 8x8
+
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(2)   # 4x4
+        )
+
+        self.fc_layers = nn.Sequential(
+            nn.Flatten(),  # 256 * 4 * 4 = 4096
+            nn.Linear(4096, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 10)  # 10 classes
+        )
 
     def forward(self, x):
-        return self.model(x)
+        x = self.cnn_layers(x)
+        x = self.fc_layers(x)
+        return x
 
-
+# ✅ Training function (same structure as before)
 def train_model(data_dir, epochs=30, batch_size=64):
     transform = transforms.Compose([
         transforms.Grayscale(1),
@@ -28,7 +56,6 @@ def train_model(data_dir, epochs=30, batch_size=64):
     dataset = datasets.ImageFolder(data_dir, transform=transform)
     print("Class order:", dataset.classes)
 
-    # Train/Val/Test Split (70/15/15)
     total_len = len(dataset)
     train_len = int(0.7 * total_len)
     val_len = int(0.15 * total_len)
@@ -39,18 +66,17 @@ def train_model(data_dir, epochs=30, batch_size=64):
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    model = SketchResNet()
+    model = SketchCNN()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-    train_losses, val_losses = [] , []
+    train_losses, val_losses = [], []
     train_accuracies, val_accuracies = [], []
 
     for epoch in range(epochs):
-        # Training
         model.train()
         running_loss, correct, total = 0.0, 0, 0
         for imgs, labels in train_loader:
@@ -70,7 +96,6 @@ def train_model(data_dir, epochs=30, batch_size=64):
         train_losses.append(train_loss)
         train_accuracies.append(train_acc)
 
-        # Validation
         model.eval()
         val_loss, correct, total = 0.0, 0, 0
         with torch.no_grad():
@@ -93,7 +118,7 @@ def train_model(data_dir, epochs=30, batch_size=64):
     torch.save(model.state_dict(), "model.pth")
     print("Model saved to backend/model.pth")
 
-    # Plot curves
+    # Plot training progress
     plt.figure(figsize=(10,4))
     plt.subplot(1,2,1)
     plt.plot(train_losses, label="Train Loss")
@@ -113,27 +138,19 @@ def train_model(data_dir, epochs=30, batch_size=64):
     plt.savefig("loss_accuracy_plot.png")
     plt.show()
 
-    # Final test accuracy
+    # Evaluate on test set
     print("\nEvaluating on test data...")
     model.eval()
     correct, total = 0, 0
-    all_preds, all_true = [], []
-
-    for idx, (imgs, labels) in enumerate(test_loader):
+    for imgs, labels in test_loader:
         imgs, labels = imgs.to(device), labels.to(device)
         outputs = model(imgs)
         _, preds = outputs.max(1)
         correct += (preds == labels).sum().item()
         total += labels.size(0)
-        all_preds.extend(preds.cpu().numpy())
-        all_true.extend(labels.cpu().numpy())
-        
-        if idx % 10 == 0 or idx == len(test_loader) - 1:
-            print(f"Processed batch {idx+1}/{len(test_loader)}")
 
     test_acc = correct / total
     print(f"\n✅ Final Test Accuracy: {test_acc:.2f}")
-
 
 if __name__ == "__main__":
     train_model("image_data", epochs=30)

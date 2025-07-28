@@ -10,13 +10,14 @@ import cv2
 import time
 import os
 
-from train_model import SketchResNet
+# ✅ Import your custom CNN
+from train_model import SketchCNN
 
 app = Flask(__name__)
 CORS(app)
 
-# Load model
-model = SketchResNet()
+# ✅ Load the SketchCNN model instead of SketchResNet
+model = SketchCNN()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device('cpu')))
 model.eval()
 
@@ -26,14 +27,15 @@ def preprocess_user_image(pil_img):
 
     # Threshold to binarize (remove gray/anti-aliasing)
     _, img = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY)
+
     # Dilation to thicken lines
     kernel = np.ones((2, 2), np.uint8)
     img = cv2.dilate(img, kernel, iterations=1)
 
     # Find bounding box and crop
-    coords = cv2.findNonZero(255 - img)  # because we need black stroke on white for bounding box
+    coords = cv2.findNonZero(255 - img)  # Because black stroke on white bg
     if coords is None:
-        return None  # Return early if image is blank
+        return None
 
     x, y, w, h = cv2.boundingRect(coords)
     cropped = img[y:y+h, x:x+w]
@@ -62,24 +64,20 @@ def predict():
         return jsonify({"error": "Missing 'image' key in request"}), 400
 
     try:
-        # Decode base64 to PIL image
         image_data = base64.b64decode(data["image"].split(",")[1])
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
 
-        # Save the raw user image
         os.makedirs("user_drawings", exist_ok=True)
         filename = f"user_drawings/drawing_{int(time.time())}.png"
         image.save(filename)
 
-        # Degrade and preprocess the image
         image_tensor = preprocess_user_image(image)
         if image_tensor is None:
             return jsonify({"error": "Blank image received"}), 400
         
-        # OPTIONAL: Save preprocessed image for inspection
         SAVE_DEBUG_IMAGES = True
         if SAVE_DEBUG_IMAGES:
-            degraded_np = image_tensor.squeeze().numpy() * 255  # [64, 64]
+            degraded_np = image_tensor.squeeze().numpy() * 255
             degraded_np = degraded_np.astype(np.uint8)
             cv2.imwrite(f"user_drawings/degraded_{int(time.time())}.png", degraded_np)
 
@@ -112,9 +110,8 @@ def receive_category():
     if selected_class not in ['bat', 'bicycle', 'bus', 'cactus', 'clock', 'door',
                                'guitar', 'lightbulb', 'paintbrush', 'smileyface']:
         return jsonify({"error": "Invalid category"}), 400
-    
-    print(f"User selected category: {selected_class}")
 
+    print(f"User selected category: {selected_class}")
     return jsonify({"strokes": 0})
 
 
