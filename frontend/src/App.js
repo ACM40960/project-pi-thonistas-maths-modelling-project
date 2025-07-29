@@ -4,6 +4,7 @@ import TopBar from "./components/TopBar/TopBar";
 import Home from "./components/Home/Home";
 import SketchCanvas from "./components/Sketchcanvas/Sketchcanvas";
 import GenerateCanvas from "./components/GenerateCanvas/GenerateCanvas";
+import Footer from "./components/Footer/Footer";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="/generatecanvas" element={<GenerateCanvas />} />
         </Routes>
       </div>
+      <Footer />
     </div>
   );
 }

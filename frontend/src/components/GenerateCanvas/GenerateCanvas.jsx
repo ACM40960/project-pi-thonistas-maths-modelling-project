@@ -4,35 +4,111 @@ import GenerateSelectCategory from "../GenerateSelectCategory/GenerateSelectCate
 import "./GenerateCanvas.css";
 
 function GenerateCanvas() {
-  const [selectedCategory, setSelectedCategory] = useState(""); // category user selected in modal
-  const [selectedClass, setSelectedClass] = useState("");       // category sent to backend for drawing
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
   const [showCategoryModal, setShowCategoryModal] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [strokes, setStrokes] = useState([]);
   const canvasRef = useRef(null);
+  const cursorRef = useRef(null);
 
   const handleSelectCategory = async (label) => {
     setSelectedClass(label);
     setShowCategoryModal(false);
     setIsGenerating(true);
-    setStrokes([]);
 
     try {
-      const res = await fetch("http://localhost:5050/category", {
+      const res = await fetch("http://localhost:5050/ndjson-strokes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
       });
 
       const data = await res.json();
-      if (data.strokes) {
-        setStrokes(data.strokes);
+
+      if (data.drawing) {
+        console.log("Stroke data received from backend:", data.drawing);
+        drawStrokesAnimated(data.drawing);
       }
     } catch (err) {
-      console.error("Error notifying backend:", err);
+      console.error("Error fetching strokes:", err);
     } finally {
-      setIsGenerating(false);
+      
     }
+  };
+
+  const drawStrokesAnimated = (strokes) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "black";
+
+    // Normalize coordinates to canvas size
+    const allPoints = strokes.flatMap(([xList, yList]) =>
+      xList.map((x, i) => [x, yList[i]])
+    );
+
+    const xs = allPoints.map(([x]) => x);
+    const ys = allPoints.map(([, y]) => y);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const scaleX = canvas.width / (maxX - minX + 1e-6);
+    const scaleY = canvas.height / (maxY - minY + 1e-6);
+    const scale = Math.min(scaleX, scaleY);
+
+    const normalize = (x, y) => [
+      (x - minX) * scale,
+      (y - minY) * scale
+    ];
+
+    let strokeIndex = 0;
+    let pointIndex = 0;
+
+    function drawNext() {
+      if (strokeIndex >= strokes.length) {
+        if (cursorRef.current) cursorRef.current.style.display = "none";
+        setIsGenerating(false);
+        return;
+      }
+
+      const stroke = strokes[strokeIndex];
+      const xList = stroke[0];
+      const yList = stroke[1];
+
+      if (pointIndex >= xList.length - 1) {
+        strokeIndex++;
+        pointIndex = 0;
+        requestAnimationFrame(drawNext);
+        return;
+      }
+
+      const [x0n, y0n] = normalize(xList[pointIndex], yList[pointIndex]);
+      const [x1n, y1n] = normalize(xList[pointIndex + 1], yList[pointIndex + 1]);
+
+      // Draw stroke
+      ctx.beginPath();
+      ctx.moveTo(x0n, y0n);
+      ctx.lineTo(x1n, y1n);
+      ctx.stroke();
+
+      // Move cursor image
+      const cursor = cursorRef.current;
+      if (cursor) {
+        cursor.style.left = `${x1n}px`;
+        cursor.style.top = `${y1n}px`;
+        cursor.style.display = "block";
+      }
+
+      pointIndex++;
+      setTimeout(drawNext, 50); 
+    }
+
+    drawNext();
   };
 
   const handleDownload = () => {
@@ -87,8 +163,26 @@ function GenerateCanvas() {
             )}
           </h2>
 
-          <div className="canvas-placeholder">
-            <canvas id="generated-canvas" ref={canvasRef}></canvas>
+          <div className="canvas-placeholder" style={{ position: "relative" }}>
+            <canvas
+              id="generated-canvas"
+              ref={canvasRef}
+              width={500}
+              height={500}
+            ></canvas>
+            <img
+              ref={cursorRef}
+              src="/cursor2.cur"
+              alt="cursor"
+              style={{
+                position: "absolute",
+                width: "30px",
+                height: "30px",
+                display: "none",
+                pointerEvents: "none",
+                transform: "translate(-50%, -50%)"
+              }}
+            />
           </div>
         </div>
       </div>

@@ -9,14 +9,17 @@ import numpy as np
 import cv2
 import time
 import os
+from generateRNN_sampler import generate_sketch_image_base64
+import json
+import random
 
-# ✅ Import your custom CNN
+# Import your custom CNN
 from train_model import SketchCNN
 
 app = Flask(__name__)
 CORS(app)
 
-# ✅ Load the SketchCNN model instead of SketchResNet
+# Load the SketchCNN model instead of SketchResNet
 model = SketchCNN()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device('cpu')))
 model.eval()
@@ -107,12 +110,41 @@ def receive_category():
     data = request.get_json()
     selected_class = data.get("label")
 
-    if selected_class not in ['bat', 'bicycle', 'bus', 'cactus', 'clock', 'door',
-                               'guitar', 'lightbulb', 'paintbrush', 'smileyface']:
+    valid_classes = [
+        'bat', 'bicycle', 'bus', 'cactus', 'clock', 'door',
+        'guitar', 'lightbulb', 'paintbrush', 'smileyface'
+    ]
+
+    if selected_class not in valid_classes:
         return jsonify({"error": "Invalid category"}), 400
 
     print(f"User selected category: {selected_class}")
-    return jsonify({"strokes": 0})
+    try:
+        image_data = generate_sketch_image_base64(selected_class)
+        return jsonify({"image": image_data})
+    except Exception as e:
+        print("Generation error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/ndjson-strokes", methods=["POST"])
+def return_example_stroke():
+    data = request.get_json()
+    class_name = data.get("label")
+
+    file_path = f"data/{class_name}.ndjson"
+    if not os.path.exists(file_path):
+        return jsonify({ "error": "Class not found" }), 404
+
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+        random.shuffle(lines)  # Shuffle for variety
+
+        for line in lines:
+            sketch = json.loads(line)
+            if sketch.get("recognized", False):
+                return jsonify({ "drawing": sketch["drawing"] })
+
+    return jsonify({ "error": "No valid sketch found" }), 500
 
 
 if __name__ == "__main__":

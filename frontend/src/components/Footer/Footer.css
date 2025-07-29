@@ -1,0 +1,27 @@
+/* src/components/Footer/Footer.css */
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background-color: #B49FFF; /* Purple like TopBar */
+  color: white;
+  font-size: 14px;
+  font-family: 'Boldonse', system-ui;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 16px;
+  margin: 6px 25px;
+}
+
+@media (max-width: 600px) {
+  .footer {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}
