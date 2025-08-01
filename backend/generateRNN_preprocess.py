@@ -3,17 +3,24 @@ import json
 import torch
 import numpy as np
 from torch.utils.data import Dataset
+import torch.nn.functional as F
 
+from generateRNN_classmap import CLASS_TO_INDEX
 
 class StrokeDataset(Dataset):
-    def __init__(self, stroke_tensors):
+    def __init__(self, stroke_tensors, class_labels, num_classes=10):
         self.data = stroke_tensors
+        self.labels = class_labels
+        self.num_classes = num_classes
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        stroke = self.data[idx]  # [T, 5]
+        class_idx = self.labels[idx]
+        class_onehot = F.one_hot(torch.tensor(class_idx), num_classes=self.num_classes).float()  # [10]
+        return stroke, class_onehot
 
 
 def drawing_to_stroke_sequence(drawing, max_len=200):
@@ -43,33 +50,38 @@ def drawing_to_stroke_sequence(drawing, max_len=200):
     else:
         sequence = sequence[:max_len]
 
-    return torch.tensor(sequence, dtype=torch.float)
+    return torch.tensor(sequence, dtype=torch.float)  # [max_len, 5]
 
 
-def parse_ndjson_to_tensor(ndjson_path, max_drawings=1000, max_len=200):
+def parse_all_classes(input_dir="data", class_list=None, max_drawings=3000, max_len=200):
     stroke_tensors = []
-    with open(ndjson_path, 'r') as f:
-        for line in f:
-            if len(stroke_tensors) >= max_drawings:
-                break
-            data = json.loads(line)
-            if data.get("recognized", False):
-                drawing = data['drawing']
-                stroke_seq = drawing_to_stroke_sequence(drawing, max_len)
-                stroke_tensors.append(stroke_seq)
-    return stroke_tensors
+    class_labels = []
 
-
-def save_stroke_tensors_for_classes(class_list, input_dir="data", output_dir="tensor_data"):
-    os.makedirs(output_dir, exist_ok=True)
     for cls in class_list:
-        ndjson_path = os.path.join(input_dir, f"{cls}.ndjson")
-        output_path = os.path.join(output_dir, f"{cls}.pt")
-        stroke_tensors = parse_ndjson_to_tensor(ndjson_path)
-        torch.save(stroke_tensors, output_path)
-        print(f"Saved {len(stroke_tensors)} sequences for '{cls}' to {output_path}")
+        path = os.path.join(input_dir, f"{cls}.ndjson")
+        count = 0
+        with open(path, 'r') as f:
+            for line in f:
+                if count >= max_drawings:
+                    break
+                data = json.loads(line)
+                if data.get("recognized", False):
+                    drawing = data['drawing']
+                    seq = drawing_to_stroke_sequence(drawing, max_len)
+                    stroke_tensors.append(seq)
+                    class_labels.append(CLASS_TO_INDEX[cls])
+                    count += 1
+
+    return stroke_tensors, class_labels
+
+
+def save_combined_tensor_data(class_list, input_dir="data", output_path="tensor_data/all_classes.pt"):
+    strokes, labels = parse_all_classes(input_dir, class_list)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    torch.save({"strokes": strokes, "labels": labels}, output_path)
+    print(f"Saved {len(strokes)} sequences across {len(class_list)} classes to {output_path}")
 
 
 if __name__ == "__main__":
-    class_names = ['bat', 'bicycle', 'bus', 'cactus', 'clock', 'door','guitar', 'lightbulb', 'paintbrush', 'smileyface']
-    save_stroke_tensors_for_classes(class_names)
+    class_names = list(CLASS_TO_INDEX.keys())
+    save_combined_tensor_data(class_names)

@@ -17,7 +17,7 @@ function GenerateCanvas() {
     setIsGenerating(true);
 
     try {
-      const res = await fetch("http://localhost:5050/ndjson-strokes", {
+      const res = await fetch("http://localhost:5050/generate-strokes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
@@ -44,13 +44,19 @@ function GenerateCanvas() {
     ctx.lineWidth = 2;
     ctx.strokeStyle = "black";
 
-    // Normalize coordinates to canvas size
-    const allPoints = strokes.flatMap(([xList, yList]) =>
-      xList.map((x, i) => [x, yList[i]])
-    );
+    // Convert relative to absolute
+    const absStrokes = [];
+    let x = 0, y = 0;
 
-    const xs = allPoints.map(([x]) => x);
-    const ys = allPoints.map(([, y]) => y);
+    for (const [dx, dy, p1, p2, p3] of strokes) {
+      x += dx;
+      y += dy;
+      absStrokes.push([x, y, p1, p2, p3]);
+    }
+
+    // Find bounds for normalization
+    const xs = absStrokes.map(pt => pt[0]);
+    const ys = absStrokes.map(pt => pt[1]);
 
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
@@ -63,53 +69,44 @@ function GenerateCanvas() {
 
     const normalize = (x, y) => [
       (x - minX) * scale,
-      (y - minY) * scale
+      (y - minY) * scale,
     ];
 
-    let strokeIndex = 0;
-    let pointIndex = 0;
+    let prev = null;
+    let i = 0;
 
     function drawNext() {
-      if (strokeIndex >= strokes.length) {
+      if (i >= absStrokes.length) {
         if (cursorRef.current) cursorRef.current.style.display = "none";
         setIsGenerating(false);
         return;
       }
 
-      const stroke = strokes[strokeIndex];
-      const xList = stroke[0];
-      const yList = stroke[1];
+      const [x, y, p1, p2, p3] = absStrokes[i];
+      const [nx, ny] = normalize(x, y);
 
-      if (pointIndex >= xList.length - 1) {
-        strokeIndex++;
-        pointIndex = 0;
-        requestAnimationFrame(drawNext);
-        return;
+      if (prev && prev[2] === 1) {
+        ctx.beginPath();
+        ctx.moveTo(prev[0], prev[1]);
+        ctx.lineTo(nx, ny);
+        ctx.stroke();
       }
 
-      const [x0n, y0n] = normalize(xList[pointIndex], yList[pointIndex]);
-      const [x1n, y1n] = normalize(xList[pointIndex + 1], yList[pointIndex + 1]);
-
-      // Draw stroke
-      ctx.beginPath();
-      ctx.moveTo(x0n, y0n);
-      ctx.lineTo(x1n, y1n);
-      ctx.stroke();
-
-      // Move cursor image
       const cursor = cursorRef.current;
       if (cursor) {
-        cursor.style.left = `${x1n}px`;
-        cursor.style.top = `${y1n}px`;
+        cursor.style.left = `${nx}px`;
+        cursor.style.top = `${ny}px`;
         cursor.style.display = "block";
       }
 
-      pointIndex++;
-      setTimeout(drawNext, 50); 
+      prev = [nx, ny, p1];
+      i++;
+      setTimeout(drawNext, 50);
     }
 
     drawNext();
   };
+
 
   const handleDownload = () => {
     const canvas = document.getElementById("generated-canvas");
@@ -157,7 +154,12 @@ function GenerateCanvas() {
         <div className="drawing-area">
           <h2>
             {selectedClass ? (
-              <>Model is drawing: <span className="highlight">{selectedClass}</span></>
+              <>
+                Model is drawing:{" "}
+                <span className="highlight">
+                  {selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1)}
+                </span>
+              </>
             ) : (
               <>Select a category of your choice</>
             )}

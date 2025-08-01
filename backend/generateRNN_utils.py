@@ -8,6 +8,14 @@ import base64
 import torch
 import torch.nn.functional as F
 
+if torch.backends.mps.is_available():
+    device = torch.device("mps")
+elif torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
+print(f"Using device: {device}")
 
 def sample_next_point(params, temperature=0.65, num_mixtures=20):
     # Split mixture params and pen logits
@@ -43,7 +51,6 @@ def sample_next_point(params, temperature=0.65, num_mixtures=20):
 
     return [dx, dy] + p
 
-
 def strokes_to_absolute(stroke_data):
     abs_data = []
     x, y = 0, 0
@@ -54,14 +61,7 @@ def strokes_to_absolute(stroke_data):
         abs_data.append([x, y, p1, p2, p3])
     return np.array(abs_data)
 
-
 def render_strokes_to_image(stroke_data, canvas_size=256):
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    from io import BytesIO
-    from PIL import Image
-
     segments = []
     x, y = 0, 0
     segment = []
@@ -77,6 +77,9 @@ def render_strokes_to_image(stroke_data, canvas_size=256):
                 segments.append(segment)
             segment = []
 
+    if not segments:
+        return Image.new("RGB", (canvas_size, canvas_size), color="white")
+
     all_points = [pt for seg in segments for line in seg for pt in line]
     xs, ys = zip(*all_points)
 
@@ -88,7 +91,7 @@ def render_strokes_to_image(stroke_data, canvas_size=256):
 
     fig, ax = plt.subplots()
     ax.set_xlim(0, canvas_size)
-    ax.set_ylim(canvas_size, 0)  # Flip Y for visual match
+    ax.set_ylim(canvas_size, 0)  # Flip Y
     ax.axis("off")
 
     for segment in segments:

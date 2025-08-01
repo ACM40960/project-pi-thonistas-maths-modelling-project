@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class GenerateRNNEncoder(nn.Module):
-    def __init__(self, input_size=5, hidden_size=256, latent_dim=128):
+    def __init__(self, input_size=15, hidden_size=256, latent_dim=128):  # 5 stroke + 10 class one-hot
         super().__init__()
         self.hidden_size = hidden_size
         self.lstm = nn.LSTM(input_size, hidden_size, bidirectional=True, batch_first=True)
@@ -24,12 +24,12 @@ class GenerateRNNEncoder(nn.Module):
 
 
 class GenerateRNNDecoder(nn.Module):
-    def __init__(self, input_size=5, hidden_size=512, latent_dim=128, num_mixtures=20):
+    def __init__(self, input_size=15, hidden_size=512, latent_dim=128, num_mixtures=20):
         super().__init__()
         self.latent_dim = latent_dim
         self.hidden_size = hidden_size
         self.num_mixtures = num_mixtures
-        self.lstm = nn.LSTM(input_size + latent_dim, hidden_size, batch_first=True)
+        self.lstm = nn.LSTM(input_size + latent_dim, hidden_size, batch_first=True ,num_layers=2, dropout=0.2)
         self.fc = nn.Linear(hidden_size, num_mixtures * 6 + 3)  # (μx, μy, σx, σy, ρxy, π) * M + 3 pen states
 
     def forward(self, x, z):
@@ -42,7 +42,7 @@ class GenerateRNNDecoder(nn.Module):
 
 
 class GenerateRNN(nn.Module):
-    def __init__(self, input_size=5, hidden_size=256, latent_dim=128, num_mixtures=20):
+    def __init__(self, input_size=15, hidden_size=256, latent_dim=128, num_mixtures=20):
         super().__init__()
         self.encoder = GenerateRNNEncoder(input_size, hidden_size, latent_dim)
         self.decoder = GenerateRNNDecoder(input_size, hidden_size*2, latent_dim, num_mixtures)
