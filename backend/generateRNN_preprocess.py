@@ -19,8 +19,7 @@ class StrokeDataset(Dataset):
     def __getitem__(self, idx):
         stroke = self.data[idx]  # [T, 5]
         class_idx = self.labels[idx]
-        class_onehot = F.one_hot(torch.tensor(class_idx), num_classes=self.num_classes).float()  # [10]
-        return stroke, class_onehot
+        return stroke, class_idx
 
 
 def drawing_to_stroke_sequence(drawing, max_len=200):

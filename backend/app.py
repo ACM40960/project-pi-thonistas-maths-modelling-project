@@ -10,7 +10,9 @@ import cv2
 import time
 import os
 from generateRNN_sampler import generate_sketch_image_base64
-from generateRNN_sampler import sample_sketch , sample_sketch_autoload
+from generateRNN_sampler import sample_sketch 
+from generateTransformer_sampler import sample_sketch_autoload
+
 import json
 import random
 
@@ -160,6 +162,7 @@ def generate_strokes():
     except Exception as e:
         print("[ERROR]", e)
         return jsonify({ "error": str(e) }), 500
+
 
 
 if __name__ == "__main__":

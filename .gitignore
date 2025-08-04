@@ -19,6 +19,8 @@ venv/
 data/
 image_data/
 user_drawings/
+model_store/
+tensor_data/
 
 # --------------------
 # Node.js (Frontend)
