@@ -21,6 +21,7 @@ image_data/
 user_drawings/
 model_store/
 tensor_data/
+models/
 
 # --------------------
 # Node.js (Frontend)

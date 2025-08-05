@@ -48,9 +48,16 @@ function GenerateCanvas() {
     const absStrokes = [];
     let x = 0, y = 0;
 
-    for (const [dx, dy, p1, p2, p3] of strokes) {
+    for (const [dx, dy, pen] of strokes) {
       x += dx;
       y += dy;
+
+      // Convert scalar pen to old one-hot format
+      let p1 = 0, p2 = 0, p3 = 0;
+      if (pen === 0) p1 = 1;   // pen down
+      else if (pen === 1) p2 = 1; // pen lift
+      else if (pen === 2) p3 = 1; // end
+
       absStrokes.push([x, y, p1, p2, p3]);
     }
 
