@@ -4,6 +4,7 @@ import TopBar from "./components/TopBar/TopBar";
 import Home from "./components/Home/Home";
 import SketchCanvas from "./components/Sketchcanvas/Sketchcanvas";
 import GenerateCanvas from "./components/GenerateCanvas/GenerateCanvas";
+import TransformersPage from "./components/Transformers/TransformersPage"; // NEW
 import Footer from "./components/Footer/Footer";
 import "./App.css";
 
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/sketchcanvas" element={<SketchCanvas />} />
           <Route path="/generatecanvas" element={<GenerateCanvas />} />
+          <Route path="/generateTransformers" element={<TransformersPage />} /> {/* NEW */}
         </Routes>
       </div>
       <Footer />
@@ -24,4 +26,3 @@ function App() {
 }
 
 export default App;
-

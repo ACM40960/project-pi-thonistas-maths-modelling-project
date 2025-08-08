@@ -146,6 +146,40 @@ def return_example_stroke():
 
     return jsonify({ "error": "No valid sketch found" }), 500
 
+# --- ADD THIS NEW ROUTE, keep the rest of app.py as-is ---
+@app.route("/transformer-strokes", methods=["POST"])
+def transformer_strokes():
+    """
+    Temporary transformers endpoint:
+    Uses the same NDJSON source as /ndjson-strokes for now.
+    Frontend expects: { "drawing": [[[x...],[y...]], ...] }
+    """
+    data = request.get_json()
+    class_name = data.get("label")
+
+    valid_classes = [
+        'bat', 'bicycle', 'bus', 'cactus', 'clock', 'door',
+        'guitar', 'lightbulb', 'paintbrush', 'smileyface'
+    ]
+    if class_name not in valid_classes:
+        return jsonify({"error": "Invalid category"}), 400
+
+    file_path = f"data/{class_name}.ndjson"
+    if not os.path.exists(file_path):
+        return jsonify({"error": "Class not found"}), 404
+
+    try:
+        with open(file_path, "r") as f:
+            lines = f.readlines()
+        random.shuffle(lines)
+        for line in lines:
+            sketch = json.loads(line)
+            if sketch.get("recognized", False):
+                return jsonify({"drawing": sketch["drawing"]})
+        return jsonify({"error": "No valid sketch found"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)

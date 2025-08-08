@@ -1,0 +1,105 @@
+/* Full-page background image */
+.transformers-home-container {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../../../public/image3.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+  box-sizing: border-box;
+}
+
+/* Center wrapper */
+.transformers-wrap {
+  background: rgba(255, 255, 255, 0.55); 
+  padding: 20px 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.transformers-title {
+  color: #B49FFF;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Controls row */
+.transformers-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Dropdown */
+.transformers-select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid #B49FFF;
+  background: white;
+  color: #333;
+  font-size: 1rem;
+  outline: none;
+}
+
+/* Buttons */
+.t-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #B49FFF;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.t-btn:hover {
+  background: #9f85ff;
+}
+
+.t-btn.white {
+  background: #fff;
+  color: #333;
+  border: 2px solid #B49FFF;
+}
+
+.t-btn.white:hover {
+  background: #f8f8f8;
+}
+
+/* Canvas container */
+.transformers-canvas-area {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Hide the lime-green area around drawing */
+#transformers-canvas {
+  background: white;
+  border-radius: 8px;
+}
+
+/* Cursor image */
+.cursor-img {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  display: none;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
