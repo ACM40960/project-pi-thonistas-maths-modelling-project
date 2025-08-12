@@ -1,0 +1,1 @@
+model_store/lightbulb_generateRNN.pth

@@ -10,7 +10,7 @@ def vector_to_image(drawing, image_size=64, padding=20):
     min_y = min(pt for stroke in drawing for pt in stroke[1])
     max_y = max(pt for stroke in drawing for pt in stroke[1])
 
-    # Normalize coordinates into a square box with padding
+    # normalizing coordinates into a square box with padding
     scale = (256 - 2 * padding) / max(max_x - min_x + 1, max_y - min_y + 1)
     
     for stroke in drawing:
@@ -21,7 +21,7 @@ def vector_to_image(drawing, image_size=64, padding=20):
             y2 = int((stroke[1][i + 1] - min_y) * scale + padding)
             cv2.line(canvas, (x1, y1), (x2, y2), 0, 2)
 
-    # Resize to desired model input size
+    # resizing to desired model input size
     canvas = cv2.resize(canvas, (image_size, image_size), interpolation=cv2.INTER_AREA)
     return canvas
 
@@ -40,8 +40,7 @@ def save_images_from_ndjson(ndjson_path, out_dir, label, max_images=200):
                 count += 1
 
 if __name__ == "__main__":
-    classes = ["clock", "door", "bat", "bicycle", "paintbrush", "cactus", "lightbulb", "smileyface", "bus", "guitar"]
-    # no need to change the class oder here cause we are just making folder from .ndjson 
+    classes = [ "bat", "bicycle","bus", "cactus", "clock", "door", "guitar", "lightbulb", "paintbrush", "smileyface"]
     for cls in classes:
         ndjson_path = f"data/{cls}.ndjson"
         out_dir = f"image_data/{cls}"
