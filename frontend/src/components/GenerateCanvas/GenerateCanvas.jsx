@@ -9,112 +9,79 @@ function GenerateCanvas() {
   const [showCategoryModal, setShowCategoryModal] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const canvasRef = useRef(null);
-  const cursorRef = useRef(null);
+
+  const drawBase64ToCanvas = (dataUrl) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    const img = new Image();
+    img.onload = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fit image into canvas (contain) and center it
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const iw = img.width;
+      const ih = img.height;
+
+      const scale = Math.min(cw / iw, ch / ih);
+      const drawW = iw * scale;
+      const drawH = ih * scale;
+      const dx = (cw - drawW) / 2;
+      const dy = (ch - drawH) / 2;
+
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+      setIsGenerating(false);
+    };
+    img.onerror = () => {
+      console.error("Failed to load generated image");
+      setIsGenerating(false);
+    };
+    img.src = dataUrl;
+  };
 
   const handleSelectCategory = async (label) => {
+    if (!label) return;
     setSelectedClass(label);
     setShowCategoryModal(false);
     setIsGenerating(true);
 
     try {
-      const res = await fetch("http://localhost:5050/ndjson-strokes", {
+      const res = await fetch("http://localhost:5050/category", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
       });
 
-      const data = await res.json();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
 
-      if (data.drawing) {
-        console.log("Stroke data received from backend:", data.drawing);
-        drawStrokesAnimated(data.drawing);
+      const data = await res.json();
+      let dataUrl = data.image;
+
+      // Safety: ensure data URL prefix exists
+      if (dataUrl && !dataUrl.startsWith("data:image")) {
+        dataUrl = `data:image/png;base64,${dataUrl}`;
+      }
+
+      if (dataUrl) {
+        drawBase64ToCanvas(dataUrl);
+      } else {
+        throw new Error("No image returned from /category");
       }
     } catch (err) {
-      console.error("Error fetching strokes:", err);
-    } finally {
-      
+      console.error("Error fetching generated image:", err);
+      setIsGenerating(false);
     }
-  };
-
-  const drawStrokesAnimated = (strokes) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "black";
-
-    // Normalize coordinates to canvas size
-    const allPoints = strokes.flatMap(([xList, yList]) =>
-      xList.map((x, i) => [x, yList[i]])
-    );
-
-    const xs = allPoints.map(([x]) => x);
-    const ys = allPoints.map(([, y]) => y);
-
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-
-    const scaleX = canvas.width / (maxX - minX + 1e-6);
-    const scaleY = canvas.height / (maxY - minY + 1e-6);
-    const scale = Math.min(scaleX, scaleY);
-
-    const normalize = (x, y) => [
-      (x - minX) * scale,
-      (y - minY) * scale
-    ];
-
-    let strokeIndex = 0;
-    let pointIndex = 0;
-
-    function drawNext() {
-      if (strokeIndex >= strokes.length) {
-        if (cursorRef.current) cursorRef.current.style.display = "none";
-        setIsGenerating(false);
-        return;
-      }
-
-      const stroke = strokes[strokeIndex];
-      const xList = stroke[0];
-      const yList = stroke[1];
-
-      if (pointIndex >= xList.length - 1) {
-        strokeIndex++;
-        pointIndex = 0;
-        requestAnimationFrame(drawNext);
-        return;
-      }
-
-      const [x0n, y0n] = normalize(xList[pointIndex], yList[pointIndex]);
-      const [x1n, y1n] = normalize(xList[pointIndex + 1], yList[pointIndex + 1]);
-
-      // Draw stroke
-      ctx.beginPath();
-      ctx.moveTo(x0n, y0n);
-      ctx.lineTo(x1n, y1n);
-      ctx.stroke();
-
-      // Move cursor image
-      const cursor = cursorRef.current;
-      if (cursor) {
-        cursor.style.left = `${x1n}px`;
-        cursor.style.top = `${y1n}px`;
-        cursor.style.display = "block";
-      }
-
-      pointIndex++;
-      setTimeout(drawNext, 50); 
-    }
-
-    drawNext();
   };
 
   const handleDownload = () => {
     const canvas = document.getElementById("generated-canvas");
     const link = document.createElement("a");
-    link.download = `${selectedClass}.png`;
+    link.download = `${selectedClass || "sketch"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
@@ -157,7 +124,7 @@ function GenerateCanvas() {
         <div className="drawing-area">
           <h2>
             {selectedClass ? (
-              <>Model is drawing: <span className="highlight">{selectedClass}</span></>
+              <>Model generated: <span className="highlight">{selectedClass}</span></>
             ) : (
               <>Select a category of your choice</>
             )}
@@ -170,19 +137,7 @@ function GenerateCanvas() {
               width={500}
               height={500}
             ></canvas>
-            <img
-              ref={cursorRef}
-              src="/cursor2.cur"
-              alt="cursor"
-              style={{
-                position: "absolute",
-                width: "30px",
-                height: "30px",
-                display: "none",
-                pointerEvents: "none",
-                transform: "translate(-50%, -50%)"
-              }}
-            />
+            {/* No cursor / animation */}
           </div>
         </div>
       </div>

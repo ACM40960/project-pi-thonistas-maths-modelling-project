@@ -19,6 +19,7 @@ venv/
 data/
 image_data/
 user_drawings/
+generate_debuy/
 
 # --------------------
 # Node.js (Frontend)

@@ -120,32 +120,15 @@ def receive_category():
 
     print(f"User selected category: {selected_class}")
     try:
-        image_data = generate_sketch_image_base64(selected_class)
-        return jsonify({"image": image_data})
+        b64_str = generate_sketch_image_base64(selected_class)  
+
+        if not b64_str.startswith("data:image"):
+            b64_str = f"data:image/png;base64,{b64_str}"
+
+        return jsonify({"image": b64_str})
     except Exception as e:
         print("Generation error:", e)
         return jsonify({"error": str(e)}), 500
-
-@app.route("/ndjson-strokes", methods=["POST"])
-def return_example_stroke():
-    data = request.get_json()
-    class_name = data.get("label")
-
-    file_path = f"data/{class_name}.ndjson"
-    if not os.path.exists(file_path):
-        return jsonify({ "error": "Class not found" }), 404
-
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-        random.shuffle(lines)  # Shuffle for variety
-
-        for line in lines:
-            sketch = json.loads(line)
-            if sketch.get("recognized", False):
-                return jsonify({ "drawing": sketch["drawing"] })
-
-    return jsonify({ "error": "No valid sketch found" }), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
