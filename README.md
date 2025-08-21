@@ -55,7 +55,7 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 ### Classification: SketchCNN
 
-![SketchCNN Architecture](backend/diagrams/Screenshot%202025-08-18%20at%2019.38.03.png)
+![SketchCNN Architecture](backend/diagrams/GenerateRNN-1.png)
 
 **Pipeline:**
 ![Classification Pipeline](backend/diagrams/Screenshot%202025-08-18%20at%2019.38.15.png)
@@ -64,7 +64,7 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 
 ### Generation: GenerateRNN (Sketch-RNN style)
-![GenerateRNN Architecture](backend/diagrams/Screenshot%202025-08-18%20at%2019.39.48.png)
+![GenerateRNN Architecture](backend/diagrams/SketchCNN-1.png)
 
 **Pipeline:**
 ![Generation Pipeline](backend/diagrams/Screenshot%202025-08-18%20at%2019.38.24.png)
@@ -96,19 +96,19 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 ** Plots **
 
-- **Confusion Matrix** – shows class-wise prediction performance.
+- **Confusion Matrix** –
 ![Confusion Matrix](backend/reports/confusion_matrix.png)
 
-- **Precision–Recall Curve (micro-average)** – confirms balanced precision/recall.
+- **Precision–Recall Curve (micro-average)** – 
 ![Precision–Recall Curve](backend/reports/pr_curve_micro.png)
 
-- **Per-class F1 Scores** – demonstrates high performance across all categories.
+- **Per-class F1 Scores** – 
 ![Per-class F1](backend/reports/f1_per_class_bar.png)
 
-- **Accuracy Curve** – tracks accuracy over epochs.
+- **Accuracy Curve** – 
 ![Accuracy Curve](backend/reports/accuracy_curve.png)
 
-- **Loss Curve** – tracks loss reduction across training.
+- **Loss Curve** – 
 ![Loss Curve](backend/reports/loss_curve.png)
 
 
@@ -116,16 +116,16 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 ### Generation Plots
 
-- **Latent Space t-SNE** – shows class-separable clusters in the learned latent space.
+- **Latent Space t-SNE** – 
 ![Latent Space t-SNE](backend/Generate_report/latent_tsne.png)
 
-- **KL Divergence by Class** – demonstrates rapid decrease and stabilization of KL loss.
+- **KL Divergence by Class** – 
 ![KL Divergence](backend/Generate_report/summary_kl_loss.png)
 
-- **Reconstruction Loss (MDN + pen CE)** – shows decreasing reconstruction error with fluctuations across categories.
+- **Reconstruction Loss (MDN + pen CE)** – 
 ![Reconstruction Loss](backend/Generate_report/summary_recon_loss.png)
 
-- **Total Loss by Class** – combines KL and reconstruction losses, converging smoothly around epoch 15–20.
+- **Total Loss by Class** – 
 ![Total Loss](backend/Generate_report/summary_total_loss.png)
 
 ---
