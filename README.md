@@ -55,7 +55,7 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 ### Classification: SketchCNN
 
-![SketchCNN Architecture](backend/diagrams/GenerateRNN-1.png)
+![SketchCNN Architecture](backend/diagrams/SketchCNN-1.png)
 
 **Pipeline:**
 ![Classification Pipeline](backend/diagrams/Screenshot%202025-08-18%20at%2019.38.15.png)
@@ -64,7 +64,7 @@ We use the Google Quick, Draw! dataset, a large-scale crowdsourced collection of
 
 
 ### Generation: GenerateRNN (Sketch-RNN style)
-![GenerateRNN Architecture](backend/diagrams/SketchCNN-1.png)
+![GenerateRNN Architecture](backend/diagrams/GenerateRNN-1.png)
 
 **Pipeline:**
 ![Generation Pipeline](backend/diagrams/Screenshot%202025-08-18%20at%2019.38.24.png)
